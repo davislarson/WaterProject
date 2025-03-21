@@ -6,7 +6,7 @@ function ProjectList() {
 
   useEffect(() => {
     const fetchProjects = async () => {
-      const response = await fetch('https://localhost:5000/api/Water/GetProjects');
+      const response = await fetch('https://localhost:5000/Water/GetProjects');
       const data = await response.json();
       setProjects(data);
     };

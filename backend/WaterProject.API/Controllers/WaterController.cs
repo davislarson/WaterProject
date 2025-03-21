@@ -3,7 +3,7 @@ using WaterProject.API.Data;
 
 namespace WaterProject.API.Controllers;
 
-[Route("api/[controller]/[action]")]
+[Route("[controller]/[action]")]
 [ApiController]
 public class WaterController : ControllerBase
 {
@@ -18,6 +18,19 @@ public class WaterController : ControllerBase
         return allProjets;
     }
 
+    [HttpGet(Name="GetProjectsTypes")]
+    public IActionResult GetProjectTypes()
+    {
+        var projectTypes = _waterContext.Projects
+            .Select(p => p.ProjectType)
+            .Distinct()
+            .ToList();
+        
+        return Ok(projectTypes);
+    }
+
+        
+        
     [HttpGet(Name = "FunctionalProjects")]
     public IEnumerable<Project> GetFunctionalProjects()
     {
