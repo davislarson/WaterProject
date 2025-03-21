@@ -12,7 +12,7 @@ public class WaterController : ControllerBase
     public WaterController(WaterDbContext temp) => _waterContext = temp;
 
     [HttpGet(Name = "AllProjects")]
-    public IActionResult GetProjects(int pageSize = 10, int pageNumber = 1)
+    public IActionResult GetProjects(int pageSize = 10, int pageNumber = 1, [FromQuery] List<string>? projectTypes = null)
     {
         string? favProjType = Request.Cookies["FavoriteProjectType"];
         Console.WriteLine("~~~~~~~~COOKIE~~~~~~~\n" + favProjType);
@@ -26,12 +26,19 @@ public class WaterController : ControllerBase
             Expires = DateTimeOffset.Now.AddMinutes(1),
         });
         
-        var allProjects = _waterContext.Projects
+        IQueryable<Project> query = _waterContext.Projects.AsQueryable();
+
+        if (projectTypes  != null && projectTypes.Any())
+        {
+            query = query.Where(p => projectTypes.Contains(p.ProjectType));
+        }
+        
+        var allProjects = query
             .Skip(pageSize * (pageNumber - 1))
             .Take(pageSize)
             .ToList();
         
-        var totalNumProjects = _waterContext.Projects.Count();
+        var totalNumProjects = query.Count();
 
         var returnObj = new
         {
