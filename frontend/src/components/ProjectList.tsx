@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Project } from '../types/Project';
 import { useNavigate } from 'react-router-dom';
+import { fetchProjects } from '../api/ProjectsAPI';
+import Pagination from './Pagination';
 
 function ProjectList(props: { selectedCategories: string[] }) {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -8,23 +10,27 @@ function ProjectList(props: { selectedCategories: string[] }) {
   const [pageNumber, setPageNumber] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(0);
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    const fetchProjects = async () => {
-      const categoryParams  = props.selectedCategories.map((category) => `projectTypes=${encodeURIComponent(category)}`).join('&');
-      const response = await fetch(
-        `https://localhost:5000/Water/GetProjects?pageSize=${pageSize}&pageNumber=${pageNumber}${(categoryParams.length) ? `&${categoryParams}` : ''}`,
-        {
-          credentials: 'include'
-        }
-      );
-      const data = await response.json();
-      setProjects(data.allProjects);
-      setTotalPages(Math.ceil(data.totalNumProjects / pageSize));
+    const loadProjects = async () => {
+      try {
+        setLoading(true);
+        const data = await fetchProjects(pageSize, pageNumber, props.selectedCategories);
+        setProjects(data.allProjects);
+        setTotalPages(Math.ceil(data.totalNumProjects / pageSize));
+      } catch (e) {
+        setError((e as Error).message);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchProjects();
+    loadProjects();
   }, [pageSize, pageNumber, props.selectedCategories]);
 
+  if (loading) return <p>Loading Projects...</p>;
+  if (error) return <p className="text-red-500"> Error: {error}</p>;
   return (
     <>
       {projects.map((p) => (
@@ -49,47 +55,22 @@ function ProjectList(props: { selectedCategories: string[] }) {
               </li>
             </ul>
 
-            <button className='btn btn-success' onClick={() => navigate(`/donate/${p.projectName}/${p.projectId}`)}>Donate</button>
+            <button className="btn btn-success" onClick={() => navigate(`/donate/${p.projectName}/${p.projectId}`)}>
+              Donate
+            </button>
           </div>
         </div>
       ))}
-      <br />
-      <div>
-        <button onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))} disabled={pageNumber === 1}>
-          Previous
-        </button>
-
-        {[...Array(totalPages)].map((_, index) => (
-          <button
-            key={index + 1}
-            onClick={() => setPageNumber(index + 1)}
-            className={pageNumber === index + 1 ? 'active' : ''}
-            disabled={pageNumber === index + 1}
-          >
-            {index + 1}
-          </button>
-        ))}
-
-        <button
-          onClick={() => setPageNumber((prev) => Math.min(prev + 1, totalPages))}
-          disabled={pageNumber === totalPages}
-        >
-          Next
-        </button>
-      </div>
-      <br />
-      <label>Results Per Page:</label>
-      <select
-        value={pageSize}
-        onChange={(e) => {
-          setPageSize(Number(e.target.value));
-          setPageNumber(1); // Reset to first page on page size change
+      <Pagination
+        currentPage={pageNumber}
+        totalPages={totalPages}
+        pageSize={pageSize}
+        onPageChange={setPageNumber}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setPageNumber(1);
         }}
-      >
-        <option value="5">5</option>
-        <option value="10">10</option>
-        <option value="20">20</option>
-      </select>
+      />
     </>
   );
 }
