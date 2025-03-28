@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
-import './css/CategoryFilter.css';
+import '../css/CategoryFilter.css';
 
-export default function CategoryFilter( props: { setSelections: (selectedCategories: string[]) => void; selectedCategories: string[] }) {
+export default function CategoryFilter(props: {
+  setSelections: (selectedCategories: string[]) => void;
+  selectedCategories: string[];
+}) {
   const [categories, setCategories] = useState<string[]>([]);
 
   useEffect(() => {
@@ -9,7 +12,6 @@ export default function CategoryFilter( props: { setSelections: (selectedCategor
       try {
         const response = await fetch(`https://localhost:5000/Water/GetProjectTypes`);
         const data = await response.json();
-
         setCategories(data);
       } catch (error) {
         console.error('Error fetching categories:', error);
@@ -20,11 +22,11 @@ export default function CategoryFilter( props: { setSelections: (selectedCategor
   }, []);
 
   function handleCheckboxChange({ target }: { target: HTMLInputElement }) {
-   const updateCategories = props.selectedCategories.includes(target.value)
-     ? props.selectedCategories.filter((x) => x !== target.value)
-     : [...props.selectedCategories, target.value];
-   props.setSelections(updateCategories);
- }
+    const updateCategories = props.selectedCategories.includes(target.value)
+      ? props.selectedCategories.filter((x) => x !== target.value)
+      : [...props.selectedCategories, target.value];
+    props.setSelections(updateCategories);
+  }
 
   return (
     <div className="category-filter">
