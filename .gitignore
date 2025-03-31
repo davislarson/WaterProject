@@ -46,7 +46,7 @@ publish/
 
 # Environment variables
 **/.env*
-**/appsettings*.json
+
 
 # SQLite & Local Databases (Optional)
 **/*.db
